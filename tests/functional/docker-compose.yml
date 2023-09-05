@@ -1,14 +1,72 @@
+version: '3'
 services:
+
+  admin_db:
+    image: postgres:13
+    restart: always
+    env_file:
+      - ../../.env
+    expose:
+      - "${POSTGRES_PORT:-5432}"
+    volumes:
+      - admin_db_data:/var/lib/postgresql/data
+
   fastapi:
-    build: ../../.
-    image: fastapi-image
-    ...
+    build: ../../fastapi
+    image: fastapi-tests-image:sometag
+    restart: always
+    depends_on:
+      - elasticsearch
+      - redis
+      - etl
+    expose:
+      - "8000"
+    env_file:
+      - ../../.env
+# TODO make other one .env for tests? may be
 
   tests:
-    image: fastapi-image
+    image: fastapi-tests-image:sometag
     entrypoint: >
       sh -c "pip install -r /tests/functional/requirements.txt
       && python3 /tests/functional/utils/wait_for_es.py
       && python3 /tests/functional/utils/wait_for_redis.py
       && pytest /tests/functional/src"
-    ...
+    depends_on:
+     - fastapi
+
+  elasticsearch:
+    image: elasticsearch:8.9.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms200m -Xmx200m
+    restart: always
+    expose:
+      - "9200"
+    depends_on:
+      - admin_db
+
+  etl:
+    build: ../../etl
+    env_file:
+      - ../../.env
+    restart: always
+    depends_on:
+      - elasticsearch
+
+  data_generator:
+    build: ../../data_generator
+    depends_on:
+      - admin_db
+    env_file:
+      - ../../.env
+    entrypoint: ["sleep", "infinity"]
+
+  redis:
+    image: redis:7.2.0-alpine
+    expose:
+      - "6379"
+
+volumes:
+  admin_db_data:
