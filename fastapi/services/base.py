@@ -3,10 +3,9 @@ from abc import abstractmethod
 from core import config
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from models import Film, Genre, Person
-from services.cache import redis_cache
+from services.cache import async_cache
 
-fast_api_conf = config.FastApiConf()
-redis_conf = config.RedisConf()
+cache_conf = config.CacheConf.read_config()
 
 
 class BaseService:
@@ -45,7 +44,7 @@ class BaseService:
             return
         return self.model(**result)
 
-    @redis_cache(expire=redis_conf.cache_expire_in_second)
+    @async_cache(expire=cache_conf.expire_in_second)
     async def _get_by_id_elastic(self, id: str) -> dict | None:
         """
         Fetches a document by its ID from Elasticsearch and caches the result.
@@ -71,7 +70,7 @@ class BaseService:
             return
         return [self.model(**x) for x in result]
 
-    @redis_cache(expire=redis_conf.cache_expire_in_second)
+    @async_cache(expire=cache_conf.expire_in_second)
     async def _get_all_elastic(self, params: dict | None) -> list[dict]:
         """
         Retrieves all documents from Elasticsearch based on the query parameters and caches the result.
@@ -98,7 +97,7 @@ class BaseService:
             result = [x['_source'] for x in result]
         return result
 
-    @redis_cache(expire=redis_conf.cache_expire_low_in_second)
+    @async_cache(expire=cache_conf.expire_low_in_second)
     async def construct_search_query(self, query: str | None, fuzziness: int, search_fields: list[str] = None) -> dict:
         """
         Constructs a search query based on the given parameters.
