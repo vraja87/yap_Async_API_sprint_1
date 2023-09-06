@@ -2,7 +2,6 @@ pytest==6.1.2
 pytest-asyncio==0.12.0
 
 aiohttp==3.8.5
-# есть примечание про конфликты версий, я поднял aiohttp изза конфликта как раз
 
 redis==5.0.0
 elasticsearch[async]==8.9.0
