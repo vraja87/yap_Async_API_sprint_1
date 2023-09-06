@@ -10,4 +10,5 @@ class TestSettings(BaseSettings):
     redis_host: str = Field('redis', env='REDIS_HOST')
     service_url: str = ''  # TODO need to fill
 
+
 test_settings = TestSettings()
