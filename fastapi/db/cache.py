@@ -9,7 +9,7 @@ class CacheClientInitializer:
     Initializes and closes cache clients based on the specified backend type.
     """
     @staticmethod
-    async def initialize_client(backend_type: str, **kwargs) -> Any:
+    async def initialize_client(backend_type: str, **kwargs) -> Redis | None:
         """
         Asynchronously initializes a cache client based on the given backend type.
 

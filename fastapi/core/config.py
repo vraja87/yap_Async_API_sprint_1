@@ -1,5 +1,4 @@
 import os
-from typing import Any
 
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -58,7 +57,7 @@ class CacheConf:
         cls._configs[backend_type] = conf_class
 
     @staticmethod
-    def read_config() -> Any:
+    def read_config() -> CacheConfBase:
         """
         Reads and returns cache settings according backend type.
 
