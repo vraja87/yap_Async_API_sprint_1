@@ -15,7 +15,7 @@ class SearchClientInitializer:
     """
 
     @staticmethod
-    async def initialize_client(backend_type: str, **kwargs) -> Any:
+    async def initialize_client(backend_type: str, **kwargs) -> AsyncElasticsearch | None:
         """
         Asynchronously initializes a search engine client based on the given backend type.
 

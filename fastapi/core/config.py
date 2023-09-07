@@ -71,7 +71,7 @@ class SearchConf:
         cls._configs[backend_type] = conf_class
 
     @staticmethod
-    def read_config() -> Any:
+    def read_config() -> SearchConfBase:
         """
         Reads and returns search settings according to the backend type.
 
