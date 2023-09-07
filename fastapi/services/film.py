@@ -1,8 +1,7 @@
 from functools import lru_cache
 
 from core import config
-from db.elastic import get_elastic
-from elasticsearch import AsyncElasticsearch
+from db.search_engine import AbstractSearchEngine, get_search_engine
 from models import Film, Person
 from services.base import BaseService
 from services.cache import redis_cache
@@ -17,7 +16,7 @@ class FilmService(BaseService):
     """
     Service class to handle operations related to films.
 
-    :param elastic: The Elasticsearch client.
+    :param search_engine: The search engine.
     """
     index = 'movies'
     model = Film
@@ -33,9 +32,9 @@ class FilmService(BaseService):
         :return: A list of dictionaries containing the roles a person has played in films.
         """
         films_ids = person.films
-        response = await self.elastic.mget(index=self.index,
-                                           ids=films_ids,
-                                           source_includes=[f'{x}s.uuid' for x in self.roles])
+        response = await self.search_engine.mget(index=self.index,
+                                                 ids=films_ids,
+                                                 source_includes=[f'{x}s.uuid' for x in self.roles])
         person_uuid = str(person.uuid)
         result = []
         for item in response['docs']:
@@ -61,9 +60,9 @@ class FilmService(BaseService):
         :return: A list of dictionaries containing film information for the person.
         """
         films_ids = person.films
-        response = await self.elastic.mget(index=self.index,
-                                           ids=films_ids,
-                                           source_includes=('uuid', 'title', 'imdb_rating'))
+        response = await self.search_engine.mget(index=self.index,
+                                                 ids=films_ids,
+                                                 source_includes=('uuid', 'title', 'imdb_rating'))
         return [x['_source'] for x in response['docs'] if x['found']]
 
     @staticmethod
@@ -186,11 +185,11 @@ class FilmService(BaseService):
 
 
 @lru_cache()
-def get_film_service(elastic: AsyncElasticsearch = Depends(get_elastic)) -> FilmService:
+def get_film_service(search_engine: AbstractSearchEngine = Depends(get_search_engine)) -> FilmService:
     """
     Dependency function to get an instance of FilmService.
 
-    :param elastic: The Elasticsearch client.
+    :param search_engine: The search engine.
     :return: An instance of FilmService.
     """
-    return FilmService(elastic)
+    return FilmService(search_engine)

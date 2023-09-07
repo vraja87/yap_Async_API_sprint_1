@@ -2,8 +2,9 @@ from redis.asyncio import Redis
 from api.v1 import films, genres, persons
 from core import config
 from core.logger import logger
-from db import elastic, redis
-from elasticsearch import AsyncElasticsearch
+from db import search_engine, redis
+from db.search_engine import SearchBackendFactory, SearchClientInitializer
+
 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
@@ -26,12 +27,11 @@ async def startup():
     Connects to Redis and Elasticsearch databases.
     """
     redis_conf = config.RedisConf()
-    elastic_conf = config.ElasticConf()
+    search_conf = config.SearchConf.read_config()
     logger.info('Startup api service.')
     redis.redis = Redis.from_url(f"redis://{redis_conf.host}:{redis_conf.port}")
-    elastic.es = AsyncElasticsearch(hosts=[
-        f'http://{elastic_conf.host}:{elastic_conf.port}',
-    ])
+    search_engine.search_engine = await SearchBackendFactory.create_backend(search_conf.backend_type,
+                                                                            **search_conf.get_init_params())
 
 
 @app.on_event('shutdown')
@@ -41,9 +41,10 @@ async def shutdown():
 
     Closes connections to Redis and Elasticsearch databases.
     """
+    search_conf = config.SearchConf.read_config()
     logger.info('Shutdown api service.')
     await redis.redis.close()
-    await elastic.es.close()
+    await SearchClientInitializer.close_client(search_conf.backend_type, search_conf.search_conf.client)
 
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
