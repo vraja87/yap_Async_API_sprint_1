@@ -45,10 +45,10 @@ class CacheConf:
     """
     Class for reading Cache configuration.
     """
-    _configs: dict[str, type] = {}
+    _configs: dict[str, type[CacheConfBase]] = {}
 
     @classmethod
-    def register_conf(cls, backend_type: str, conf_class: type):
+    def register_conf(cls, backend_type: str, conf_class: type[CacheConfBase]):
         """
         Registers a new cache backend configuration type and its corresponding class.
 
