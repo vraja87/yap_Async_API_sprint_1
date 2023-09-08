@@ -5,12 +5,11 @@ from db.elastic import get_elastic
 from elasticsearch import AsyncElasticsearch
 from models import Film, Person
 from services.base import BaseService
-from services.cache import redis_cache
+from services.cache import async_cache
 
 from fastapi import Depends
 
-fast_api_conf = config.FastApiConf()
-redis_conf = config.RedisConf()
+cache_conf = config.CacheConf.read_config()
 
 
 class FilmService(BaseService):
@@ -24,7 +23,7 @@ class FilmService(BaseService):
     search_fields = ['title^3', 'description']
     roles = ('actor', 'writer', 'director')
 
-    @redis_cache(expire=redis_conf.cache_expire_in_second)
+    @async_cache(expire=cache_conf.expire_in_second)
     async def get_roles_in_films(self, person: Person) -> list[dict[str, list[str]]]:
         """
         Fetches the roles a person has played in films.
@@ -52,7 +51,7 @@ class FilmService(BaseService):
             result.append(movie_roles)
         return result
 
-    @redis_cache(expire=redis_conf.cache_expire_in_second)
+    @async_cache(expire=cache_conf.expire_in_second)
     async def get_person_films_info(self, person: Person) -> list[dict]:
         """
         Fetches the film information for a specific person.
@@ -67,7 +66,7 @@ class FilmService(BaseService):
         return [x['_source'] for x in response['docs'] if x['found']]
 
     @staticmethod
-    @redis_cache(expire=redis_conf.cache_expire_low_in_second)
+    @async_cache(expire=cache_conf.expire_low_in_second)
     async def construct_sort_query(sort_by: list[str]) -> dict:
         """
         Constructs the sort query for Elasticsearch.
@@ -104,7 +103,7 @@ class FilmService(BaseService):
         return sort_settings
 
     @staticmethod
-    @redis_cache(expire=redis_conf.cache_expire_low_in_second)
+    @async_cache(expire=cache_conf.expire_low_in_second)
     async def construct_filter_query(genres: list[str], genre_condition: str) -> dict:
         """
         Constructs the filter query based on genres for Elasticsearch.
@@ -148,7 +147,7 @@ class FilmService(BaseService):
         return filter_settings
 
     @staticmethod
-    @redis_cache(expire=redis_conf.cache_expire_low_in_second)
+    @async_cache(expire=cache_conf.expire_low_in_second)
     async def construct_range_query(rating_min: float | None, rating_max: float | None) -> dict:
         """
         Constructs the range query based on IMDb ratings for Elasticsearch.

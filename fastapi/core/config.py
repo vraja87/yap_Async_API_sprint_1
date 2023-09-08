@@ -1,26 +1,86 @@
 import os
 
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 env_file = '.env' if os.path.exists('.env') else None
 
 
-class RedisConf(BaseSettings):
+class CacheConfBase(BaseSettings):
+    """
+    Configuration settings for cache backend.
+
+    :param backend_type: Type of cache backend.
+    :param expire_in_second: Default cache expiration time in seconds.
+    :param expire_low_in_second: Low-priority cache expiration time in seconds.
+    """
+
+    model_config = SettingsConfigDict(env_file=env_file, env_prefix='CACHE_')
+
+    backend_type: str = 'redis'
+    expire_in_second: int = 180
+    expire_low_in_second: int = 30
+
+
+class RedisConf(CacheConfBase):
     """
     Configuration settings for Redis.
 
     :param host: The Redis host address.
     :param port: The Redis port.
-    :param cache_expire_in_second: Default cache expiration time in seconds.
-    :param cache_expire_low_in_second: Low-priority cache expiration time in seconds.
     """
-
-    model_config = SettingsConfigDict(env_file=env_file, env_prefix='REDIS_')
 
     host: str = 'redis'
     port: int = 6379
-    cache_expire_in_second: int = 180
-    cache_expire_low_in_second: int = 30
+
+    def get_init_params(self) -> dict:
+        return {
+            'host': self.host,
+            'port': self.port,
+        }
+
+
+class CacheConf:
+    """
+    Class for reading Cache configuration.
+    """
+    _configs: dict[str, type[CacheConfBase]] = {}
+
+    @classmethod
+    def register_conf(cls, backend_type: str, conf_class: type[CacheConfBase]):
+        """
+        Registers a new cache backend configuration type and its corresponding class.
+
+        :param backend_type: The type of the cache backend ('redis', etc.).
+        :param conf_class: The class corresponding to the cache backend configuration.
+        """
+        cls._configs[backend_type] = conf_class
+
+    @staticmethod
+    def read_config() -> CacheConfBase:
+        """
+        Reads and returns cache settings according backend type.
+
+        :return: The config settings for the chosen cache backend.
+        """
+        try:
+            base_config = CacheConfBase()
+        except ValidationError as e:
+            raise ValueError("Invalid base cache configuration") from e
+
+        backend_type = base_config.backend_type
+        config_class = CacheConf._configs.get(backend_type)
+
+        if config_class is None:
+            raise ValueError(f"Unknown backend type: {backend_type}")
+
+        try:
+            return config_class()
+        except ValidationError as e:
+            raise ValueError(f"Invalid {backend_type} configuration") from e
+
+
+CacheConf.register_conf('redis', RedisConf)
 
 
 class ElasticConf(BaseSettings):
