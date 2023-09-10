@@ -45,7 +45,7 @@ class BaseService:
         return self.model(**result)
 
     @async_cache(expire=cache_conf.expire_in_second)
-    async def _get_by_id_elastic(self, id: str) -> dict | None:
+    async def _get_by_id(self, id: str) -> dict | None:
         """
         Fetches a document by its ID from Elasticsearch and caches the result.
 
@@ -71,7 +71,7 @@ class BaseService:
         return [self.model(**x) for x in result]
 
     @async_cache(expire=cache_conf.expire_in_second)
-    async def _get_all_elastic(self, params: dict | None) -> list[dict]:
+    async def _get_all(self, params: dict | None) -> list[dict]:
         """
         Retrieves all documents from Elasticsearch based on the query parameters and caches the result.
 
