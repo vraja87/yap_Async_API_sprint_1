@@ -1,12 +1,17 @@
 import time
 
-from redis.asyncio import Redis
+from redis import Redis, ConnectionError
 
-from settings import test_settings
+# TODO steel trouble with PATHS
+# TODO from functional.settings import test_settings
 
 if __name__ == '__main__':
-    es_client = Redis(host=f'http://{test_settings.redis_host}:9200')
+    redis_client = Redis.from_url('redis://redis:6379')
     while True:
-        if es_client.ping():
-            break
+        try:
+            response = redis_client.ping()
+            if response:
+                break
+        except ConnectionError:
+            pass
         time.sleep(1)
