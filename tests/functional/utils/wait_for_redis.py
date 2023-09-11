@@ -2,7 +2,7 @@ import time
 
 from redis import Redis, ConnectionError
 
-# TODO steel trouble with PATHS
+# TODO still trouble with PATHS
 # TODO from functional.settings import test_settings
 
 if __name__ == '__main__':
