@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Literal
 
 from api.v1.constants import AllowedFilmSorting
+import api.v1.api_examples as api_examples
 from api.v1.models.film import FilmDetailsResponse, FilmResponse
 from api.v1.models.genre import GenreResponse
 from api.v1.models.person import PersonShortResponse
@@ -20,7 +21,9 @@ redis_conf = config.RedisConf()
             summary='Retrieve Films Based on Multiple Filters',
             description='Fetch a list of films filtered by genres, IMDb rating, and sorting preferences.'
                         'Supports pagination.',
-            response_model=list[FilmResponse])
+            response_model=list[FilmResponse],
+            responses=api_examples.films,
+            )
 async def films(genre: list[str] = Query([], min_length=0, max_length=5),
                 genre_condition: Literal['all', 'any'] = Query('all'),
                 sort_by: list[AllowedFilmSorting] = Query(['-imdb_rating'], alias='sort', min_length=1, max_length=5),
@@ -63,7 +66,9 @@ async def films(genre: list[str] = Query([], min_length=0, max_length=5),
             description='Perform a fuzzy search for films based on a query string. '
                         'Further filter the results by genre, rating, and sort them according to preferences. '
                         'Supports pagination.',
-            response_model=list[FilmResponse])
+            response_model=list[FilmResponse],
+            responses=api_examples.film_search,
+            )
 async def film_search(query: str | None = Query(None, min_length=1, max_length=128),
                       fuzziness: int = Query(1, ge=0, le=3, alias='fuzzy'),
                       genre: list[str] = Query([], min_length=0, max_length=5),
@@ -118,7 +123,9 @@ async def film_search(query: str | None = Query(None, min_length=1, max_length=1
             summary='Fetch Detailed Information of a Film by ID.',
             description='Retrieve detailed information about a film, including genres, '
                         'directors, actors, and writers, based on its unique ID.',
-            response_model=FilmDetailsResponse)
+            response_model=FilmDetailsResponse,
+            responses=api_examples.film_details,
+            )
 async def film_details(film_id: str, film_service: FilmService = Depends(get_film_service)) -> FilmDetailsResponse:
     """
     Retrieve detailed information about a specific film by its ID.

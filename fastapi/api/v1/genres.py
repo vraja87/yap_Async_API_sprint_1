@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from api.v1.models.genre import GenreResponse
+import api.v1.api_examples as api_examples
 from core.logger import logger
 from services.genre import GenreService, get_genre_service
 
@@ -15,6 +16,7 @@ router = APIRouter()
             summary='Fetch Detailed Information of a Genre by ID.',
             description='Retrieve detailed information for a genre, '
                         'including its unique identifier and name, based on its unique ID.',
+            responses=api_examples.genre,
             )
 async def genre_details(genre_id: str, genre_service: GenreService = Depends(get_genre_service)) -> GenreResponse:
     """
@@ -37,6 +39,7 @@ async def genre_details(genre_id: str, genre_service: GenreService = Depends(get
             summary=' Fetch All Genres with Pagination Support.',
             description='Get a list of all genres available in the database. '
                         'Supports pagination and sorting by genre name.',
+            responses=api_examples.genres,
             )
 async def genres_all(genre_service: GenreService = Depends(get_genre_service),
                      page_number: int = Query(0, ge=0, alias='page_number'),

@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from api.v1.models.film import FilmResponse
 from api.v1.models.person import PersonResponse
+import api.v1.api_examples as api_examples
 from core.logger import logger
 from services.film import FilmService, get_film_service
 from services.person import PersonService, get_person_service
@@ -17,6 +18,7 @@ router = APIRouter()
             summary='Retrieve Detailed Information for a Specific Person by ID.',
             description='Obtain detailed information about a person identified by their unique ID,'
                         ' including their roles in various films.',
+            responses=api_examples.person_id,
             )
 async def person_details(
         person_id: str,
@@ -49,6 +51,8 @@ async def person_details(
             summary='List All Films Featuring a Specific Person by ID.',
             description='Get a list of films in which a person identified by their unique ID has participated,'
                         ' including their roles in those films.',
+            responses=api_examples.person_film,
+
             )
 async def persons_films(person_id: str,
                         person_service: PersonService = Depends(get_person_service),
@@ -77,6 +81,7 @@ async def persons_films(person_id: str,
             description='Perform a search for persons based on their full names. '
                         'Supports fuzzy matching and pagination. '
                         'Fuzziness levels range from 0 to 3. Pagination parameters can be adjusted.',
+            responses=api_examples.person_search,
             )
 async def persons_search(
         query: str | None = None,
