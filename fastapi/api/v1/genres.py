@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
-from api.v1.models.genre import GenreResponse
 import api.v1.api_examples as api_examples
+from api.v1.models.genre import GenreResponse
 from core.logger import logger
 from services.genre import GenreService, get_genre_service
 

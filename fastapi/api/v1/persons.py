@@ -1,8 +1,8 @@
 from http import HTTPStatus
 
+import api.v1.api_examples as api_examples
 from api.v1.models.film import FilmResponse
 from api.v1.models.person import PersonResponse
-import api.v1.api_examples as api_examples
 from core.logger import logger
 from services.film import FilmService, get_film_service
 from services.person import PersonService, get_person_service

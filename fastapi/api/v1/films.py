@@ -1,8 +1,8 @@
 from http import HTTPStatus
 from typing import Literal
 
-from api.v1.constants import AllowedFilmSorting
 import api.v1.api_examples as api_examples
+from api.v1.constants import AllowedFilmSorting
 from api.v1.models.film import FilmDetailsResponse, FilmResponse
 from api.v1.models.genre import GenreResponse
 from api.v1.models.person import PersonShortResponse

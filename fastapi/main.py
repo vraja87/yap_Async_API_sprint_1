@@ -1,9 +1,9 @@
-from redis.asyncio import Redis
 from api.v1 import films, genres, persons
 from core import config
 from core.logger import logger
 from db import elastic, redis
 from elasticsearch import AsyncElasticsearch
+from redis.asyncio import Redis
 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
