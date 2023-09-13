@@ -3,11 +3,17 @@ from typing import Any
 
 import backoff
 from core.logger import logger, LoggerAdapter
-from elasticsearch import AsyncElasticsearch, NotFoundError, ConnectionError
+from elasticsearch import AsyncElasticsearch, NotFoundError, ConnectionError, \
+    BadRequestError
 
 
 class SearchNotFoundError(Exception):
     """Raised when a search query returns no results."""
+    pass
+
+
+class SearchBadRequestError(Exception):
+    """Raised when a search request parameters are wrong."""
     pass
 
 
@@ -123,6 +129,9 @@ class ElasticSearchEngine(AbstractSearchEngine):
             return await self.client.search(index=index, query=query, sort=sort, from_=from_, size=size)
         except NotFoundError as e:
             raise SearchNotFoundError(f"Document not found in Elasticsearch: {str(e)}") from e
+        except BadRequestError as e:
+            raise SearchBadRequestError(f"Check request parameters: {str(e)}") from e
+
 
 
 class SearchBackendFactory:

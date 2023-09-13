@@ -1,14 +1,19 @@
-from pydantic import BaseSettings, Field
+import os
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+env_file = '.env' if os.path.exists('.env') else None
 
 
 class TestSettings(BaseSettings):
-    es_host: str = Field('http://127.0.0.1:9200', env='ELASTIC_HOST')
-    es_index: str = 'movies'  # TODO ? movies genres persons
-    es_id_field: str = ''  # TODO need to fill
-    es_index_mapping: dict = ''  # TODO need to fill
+    model_config = SettingsConfigDict(env_file=env_file, env_prefix='TESTS_')
 
-    redis_host: str = Field('redis', env='REDIS_HOST')
-    service_url: str = ''  # TODO need to fill
+    es_host: str = 'http://elasticsearch:9200'
+    redis_host: str = 'redis://redis:6379'
+    es_index: str = 'movies'  # TODO ? movies genres persons
+    es_id_field: str = 'uuid'
+    # es_index_mapping: dict = ''  # TODO need to fill
+    service_url: str = 'http://fastapi:8000'
 
 
 test_settings = TestSettings()
