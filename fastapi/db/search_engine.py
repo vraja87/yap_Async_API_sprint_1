@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
+import backoff
+from core.logger import logger, LoggerAdapter
+from elasticsearch import AsyncElasticsearch, NotFoundError, ConnectionError
 
 
 class SearchNotFoundError(Exception):
@@ -15,6 +17,8 @@ class SearchClientInitializer:
     """
 
     @staticmethod
+    @backoff.on_exception(backoff.expo, ConnectionError, factor=0.5, max_value=5.0,
+                          max_tries=10, logger=LoggerAdapter(logger))
     async def initialize_client(backend_type: str, **kwargs) -> AsyncElasticsearch | None:
         """
         Asynchronously initializes a search engine client based on the given backend type.
@@ -95,18 +99,25 @@ class AbstractSearchEngine(ABC):
 
 
 class ElasticSearchEngine(AbstractSearchEngine):
+
+    @backoff.on_exception(backoff.expo, ConnectionError, factor=0.5, max_value=5.0,
+                          max_tries=5, logger=LoggerAdapter(logger))
     async def get(self, index: str, id: type) -> dict | None:
         try:
             return await self.client.get(index=index, id=id)
         except NotFoundError as e:
             raise SearchNotFoundError(f"Document not found in Elasticsearch: {str(e)}") from e
 
+    @backoff.on_exception(backoff.expo, ConnectionError, factor=0.5, max_value=5.0,
+                          max_tries=5, logger=LoggerAdapter(logger))
     async def mget(self, index: str, ids: list, source_includes: list[str]) -> list[dict] | None:
         try:
             return await self.client.mget(index=index, ids=ids, source_includes=source_includes)
         except NotFoundError as e:
             raise SearchNotFoundError(f"Document not found in Elasticsearch: {str(e)}") from e
 
+    @backoff.on_exception(backoff.expo, ConnectionError, factor=0.5, max_value=5.0,
+                          max_tries=5, logger=LoggerAdapter(logger))
     async def search(self, index: str, query: dict, sort: dict[dict], from_: int = 0, size: int = 100) -> dict | None:
         try:
             return await self.client.search(index=index, query=query, sort=sort, from_=from_, size=size)

@@ -2,6 +2,7 @@ import json
 from functools import wraps
 
 from db.cache import get_cache
+from core.logger import logger
 
 
 def async_cache(expire: int = 60):
@@ -14,6 +15,7 @@ def async_cache(expire: int = 60):
     :param expire: The time-to-live (TTL) of the cache in seconds. Default is 60.
     :return: The cached result, or the result of the function call if not in cache.
     """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -27,12 +29,21 @@ def async_cache(expire: int = 60):
             key = f"{key_prefix}:{args[1:] if is_method else args}:{kwargs}"
 
             cache = await get_cache()
-            cached_value = await cache.get(key)
-            if cached_value:
-                return json.loads(cached_value)
+            try:
+                cached_value = await cache.get(key)
+                if cached_value:
+                    return json.loads(cached_value)
+            except Exception:
+                logger.error('Error while getting cache from cache service. Skipping.')
 
             result = await func(*args, **kwargs)
-            await cache.set(key=key, value=json.dumps(result), expire=expire)
+
+            try:
+                await cache.set(key=key, value=json.dumps(result), expire=expire)
+            except Exception:
+                logger.error('Error while set cache to cache service. Skipping.')
             return result
+
         return wrapper
+
     return decorator
