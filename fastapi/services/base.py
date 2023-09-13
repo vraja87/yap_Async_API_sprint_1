@@ -1,22 +1,21 @@
 from abc import abstractmethod
 
 from core import config
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from db.search_engine import AbstractSearchEngine, SearchNotFoundError
 from models import Film, Genre, Person
-from services.cache import redis_cache
+from services.cache import async_cache
 
-fast_api_conf = config.FastApiConf()
-redis_conf = config.RedisConf()
+cache_conf = config.CacheConf.read_config()
 
 
 class BaseService:
     """
     Base class that provides common methods for all services.
 
-    :param elastic: The Elasticsearch client.
+    :param search_engine: The search engine.
     """
-    def __init__(self, elastic: AsyncElasticsearch):
-        self.elastic = elastic
+    def __init__(self, search_engine: AbstractSearchEngine):
+        self.search_engine = search_engine
 
     @property
     @abstractmethod
@@ -40,13 +39,13 @@ class BaseService:
         :param id: The ID of the document to fetch.
         :return: An instance of Film, Person, or Genre if found; otherwise, None.
         """
-        result = await self._get_by_id_elastic(id)
+        result = await self._get_by_id(id)
         if result is None:
             return
         return self.model(**result)
 
-    @redis_cache(expire=redis_conf.cache_expire_in_second)
-    async def _get_by_id_elastic(self, id: str) -> dict | None:
+    @async_cache(expire=cache_conf.expire_in_second)
+    async def _get_by_id(self, id: str) -> dict | None:
         """
         Fetches a document by its ID from Elasticsearch and caches the result.
 
@@ -54,9 +53,9 @@ class BaseService:
         :return: The fetched document as a dictionary or None if not found.
         """
         try:
-            doc = await self.elastic.get(index=self.index, id=id)
+            doc = await self.search_engine.get(index=self.index, id=id)
             return doc['_source']
-        except NotFoundError:
+        except SearchNotFoundError:
             return
 
     async def get_all(self, params: dict | None) -> list[Film | Person | Genre] | None:
@@ -66,13 +65,13 @@ class BaseService:
         :param params: Query parameters for fetching documents.
         :return: A list of Film, Person, or Genre instances or None if not found.
         """
-        result = await self._get_all_elastic(params)
+        result = await self._get_all(params)
         if result is None:
             return
         return [self.model(**x) for x in result]
 
-    @redis_cache(expire=redis_conf.cache_expire_in_second)
-    async def _get_all_elastic(self, params: dict | None) -> list[dict]:
+    @async_cache(expire=cache_conf.expire_in_second)
+    async def _get_all(self, params: dict | None) -> list[dict]:
         """
         Retrieves all documents from Elasticsearch based on the query parameters and caches the result.
 
@@ -91,14 +90,20 @@ class BaseService:
             body['query'] = {}
             body['query']['match_all'] = {}
 
-        result = await self.elastic.search(index=self.index, query=body['query'], sort=body['sort'], **pagination)
+        try:
+            result = await self.search_engine.search(index=self.index,
+                                                     query=body['query'],
+                                                     sort=body['sort'],
+                                                     **pagination)
+        except SearchNotFoundError:
+            pass
 
         result = result.get('hits', {}).get('hits', [])
         if result:
             result = [x['_source'] for x in result]
         return result
 
-    @redis_cache(expire=redis_conf.cache_expire_low_in_second)
+    @async_cache(expire=cache_conf.expire_low_in_second)
     async def construct_search_query(self, query: str | None, fuzziness: int, search_fields: list[str] = None) -> dict:
         """
         Constructs a search query based on the given parameters.

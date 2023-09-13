@@ -1,7 +1,6 @@
 from functools import lru_cache
 
-from db.elastic import get_elastic
-from elasticsearch import AsyncElasticsearch
+from db.search_engine import AbstractSearchEngine, get_search_engine
 from models.person import Person
 from services.base import BaseService
 
@@ -12,7 +11,7 @@ class PersonService(BaseService):
     """
     Service class to handle operations related to persons.
 
-    :param elastic: The Elasticsearch client.
+    :param search_engine: The search engine.
     """
     index = 'persons'
     model = Person
@@ -20,11 +19,11 @@ class PersonService(BaseService):
 
 
 @lru_cache()
-def get_person_service(elastic: AsyncElasticsearch = Depends(get_elastic)) -> PersonService:
+def get_person_service(search_engine: AbstractSearchEngine = Depends(get_search_engine)) -> PersonService:
     """
     Dependency function to get an instance of PersonService.
 
-    :param elastic: The Elasticsearch client.
+    :param search_engine: The search engine.
     :return: An instance of PersonService.
     """
-    return PersonService(elastic)
+    return PersonService(search_engine)

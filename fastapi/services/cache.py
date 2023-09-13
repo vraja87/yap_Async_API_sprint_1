@@ -1,12 +1,12 @@
 import json
 from functools import wraps
 
-from db.redis import get_redis
+from db.cache import get_cache
 
 
-def redis_cache(expire: int = 60):
+def async_cache(expire: int = 60):
     """
-    Redis caching decorator for asynchronous functions.
+    Caching decorator for asynchronous functions.
 
     This decorator caches the result of a function call in Redis with a specified expiry time.
     The cache key is generated from the function name, arguments, and keyword arguments.
@@ -26,13 +26,13 @@ def redis_cache(expire: int = 60):
 
             key = f"{key_prefix}:{args[1:] if is_method else args}:{kwargs}"
 
-            redis = await get_redis()
-            cached_value = await redis.get(key)
+            cache = await get_cache()
+            cached_value = await cache.get(key)
             if cached_value:
                 return json.loads(cached_value)
 
             result = await func(*args, **kwargs)
-            await redis.set(name=key, value=json.dumps(result), ex=expire)
+            await cache.set(key=key, value=json.dumps(result), expire=expire)
             return result
         return wrapper
     return decorator
