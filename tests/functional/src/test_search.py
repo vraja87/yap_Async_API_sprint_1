@@ -1,6 +1,7 @@
 import pytest
 from functional.testdata.es_mapping import es_search_films
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     'query_data, expected_answer',

@@ -1,21 +1,25 @@
-from pprint import pprint
 from typing import List
 
 import aiohttp
 import pytest
 import json
 
-import pytest_asyncio
-
 from functional.settings import test_settings
 from elasticsearch import AsyncElasticsearch
 
 
 @pytest.fixture
-def es_write_data_OLD():
+def es_write_data_OLD(request):
     async def inner(data: List[dict]):
-        bulk_query = get_es_bulk_query(data, test_settings.es_index, test_settings.es_id_field)
-        # str_query = '\n'.join(bulk_query) + '\n'
+        marker = request.node.get_closest_marker("fixt_data")
+        if marker is None:
+            es_index = test_settings.es_index
+            es_id_field = test_settings.es_id_field
+        else:
+            es_index = marker.kwargs['es_index']
+            es_id_field = marker.kwargs['es_id_field']
+
+        bulk_query = get_es_bulk_query(data, es_index, es_id_field)
 
         es_client = AsyncElasticsearch(hosts=[test_settings.es_host])
         response = await es_client.bulk(operations=bulk_query, refresh=True)
@@ -33,20 +37,20 @@ async def es_client():
 
 
 @pytest.fixture
-def es_write_data(es_client: AsyncElasticsearch):
+def es_write_data(request, es_client: AsyncElasticsearch):
     async def inner(data: list[dict]):
-        print('HERE1')
-        print(test_settings.es_index,test_settings.es_id_field)
-        bulk_query = get_es_bulk_query(data, test_settings.es_index,
-                                       test_settings.es_id_field)
-        print('HERE2')
+        marker = request.node.get_closest_marker("fixt_data")
+        if marker is None:
+            es_index = test_settings.es_index
+            es_id_field = test_settings.es_id_field
+        else:
+            es_index = marker.kwargs['es_index']
+            es_id_field = marker.kwargs['es_id_field']
+        bulk_query = get_es_bulk_query(data, es_index, es_id_field)
         response = await es_client.bulk(operations=bulk_query,
                                         refresh=True)  # it works...
-        print('HERE3')
         if response['errors']:
             raise Exception('Ошибка записи данных в Elasticsearch')
-
-    print('HERE4')
     return inner
 
 
