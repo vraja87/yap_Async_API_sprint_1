@@ -2,7 +2,6 @@ import os
 
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Any
 
 env_file = '.env' if os.path.exists('.env') else None
 
