@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
+import backoff
+from core.logger import logger, LoggerAdapter
 
-from redis.asyncio import Redis
+from redis.asyncio import Redis, ConnectionError
 
 
 class CacheClientInitializer:
@@ -9,6 +11,8 @@ class CacheClientInitializer:
     Initializes and closes cache clients based on the specified backend type.
     """
     @staticmethod
+    @backoff.on_exception(backoff.expo, ConnectionError, factor=0.5, max_value=5.0,
+                          max_tries=10, logger=LoggerAdapter(logger))
     async def initialize_client(backend_type: str, **kwargs) -> Redis | None:
         """
         Asynchronously initializes a cache client based on the given backend type.
@@ -80,6 +84,8 @@ class RedisCache(CacheBackend):
         super().__init__()
         self.client = redis
 
+    @backoff.on_exception(backoff.expo, ConnectionError, factor=0.5, max_value=5.0,
+                          max_tries=3, logger=LoggerAdapter(logger))
     async def get(self, key: str) -> str | None:
         """
         Asynchronously retrieves the value for the given key from the Redis cache.
@@ -90,6 +96,8 @@ class RedisCache(CacheBackend):
         value = await self.client.get(key)
         return value
 
+    @backoff.on_exception(backoff.expo, ConnectionError, factor=0.5, max_value=5.0,
+                          max_tries=3, logger=LoggerAdapter(logger))
     async def set(self, key: str, value: str, expire: int) -> None:
         """
         Asynchronously sets the value for the given key in the Redis cache with an expiration time.

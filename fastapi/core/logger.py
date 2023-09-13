@@ -1,3 +1,4 @@
+import logging
 from loguru import logger
 
 fmt = "{process.id} - {thread.id} - {time} - {name} - {level} - {message}"
@@ -62,3 +63,46 @@ LOGGING = {
         'handlers': LOG_DEFAULT_HANDLERS,
     },
 }
+
+
+class LoggerAdapter:
+    """
+    A LoggerAdapter adapts a `loguru` logger to be compatible with the standard `logging` library.
+    """
+
+    def __init__(self, logger: 'logger'):
+        """
+        Initialize a LoggerAdapter.
+
+        :param logger: The logger object from `loguru` to be adapted.
+        """
+        self.logger = logger
+
+    def log(self, level: int, message: str, *args, **kwargs):
+        """
+        Logs a message with the specified severity.
+
+        :param level: The severity level of the log.
+        :param message: The message to be logged.
+        :param args: Arguments for string formatting of the message.
+        :param kwargs: Keyword arguments for the logger.
+        """
+        if args:
+            message = message % args
+        if level == logging.INFO:
+            self.logger.info(message, **kwargs)
+        elif level == logging.WARNING:
+            self.logger.warning(message, **kwargs)
+        elif level == logging.ERROR:
+            self.logger.error(message, **kwargs)
+        else:
+            self.logger.debug(message, **kwargs)
+
+    def __getattr__(self, name: str) -> str:
+        """
+        Retrieves an attribute from the logger object.
+
+        :param name: Name of the attribute.
+        :returns: The attribute value.
+        """
+        return getattr(self.logger, name)
