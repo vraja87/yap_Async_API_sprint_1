@@ -3,7 +3,6 @@ from functional.testdata.es_mapping import our_genres
 
 
 @pytest.mark.asyncio
-@pytest.mark.fixt_data(es_index='genres', es_id_field='uuid')
 @pytest.mark.parametrize(
     'query_data, expected_answer',
     [
@@ -16,7 +15,7 @@ from functional.testdata.es_mapping import our_genres
             {'status': 200, 'length': 30}  # start page 0
         ),
         (
-            {'page_number': 1},  # TODO hz why 404 and not bad request
+            {'page_number': 1},
             {'status': 404, 'length': 1}
         ),
         (
@@ -54,12 +53,12 @@ from functional.testdata.es_mapping import our_genres
     ]
 )
 async def test_all_genres_page_num_size(
-        make_get_request, es_write_data_OLD,
+        make_get_request, es_write_genres,
         query_data: dict, expected_answer: dict
 ):
     """Test different page_size and page_number combinations"""
 
-    await es_write_data_OLD(our_genres)
+    await es_write_genres(our_genres)
     body, headers, status = await make_get_request(
         f'/api/v1/genres/', query_data
     )
@@ -69,7 +68,6 @@ async def test_all_genres_page_num_size(
 
 
 @pytest.mark.asyncio
-@pytest.mark.fixt_data(es_index='genres', es_id_field='uuid')
 @pytest.mark.parametrize(
     'query_data, expected_answer',
     [
@@ -80,11 +78,11 @@ async def test_all_genres_page_num_size(
     ]
 )
 async def test_all_genres_format_sorting_consistency(
-        make_get_request, es_write_data_OLD,
+        make_get_request,  es_write_genres,
         query_data: dict, expected_answer: dict
 ):
     """Test data consistency on some page, genre format, sorting by names"""
-    await es_write_data_OLD(our_genres)
+    await es_write_genres(our_genres)
     body, headers, status = await make_get_request(f'/api/v1/genres/',
                                                    query_data)
 
@@ -98,12 +96,11 @@ async def test_all_genres_format_sorting_consistency(
 
 
 @pytest.mark.asyncio
-@pytest.mark.fixt_data(es_index='genres', es_id_field='uuid')
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
         (
-            {'uuid': 'e5780277-9d62-4540-98e6-e7abeba51557'},
+            {'uuid': our_genres[4]['uuid']},
             {'body': our_genres[4],
              'status': 200}
         ),
@@ -115,10 +112,10 @@ async def test_all_genres_format_sorting_consistency(
     ]
 )
 async def test_genre_details(
-        es_write_data_OLD, make_get_request,
+        es_write_genres, make_get_request,
         test_data, expected_answer
 ):
-    await es_write_data_OLD(our_genres)
+    await es_write_genres(our_genres)
     body, headers, status = await make_get_request(
         f'/api/v1/genres/{test_data["uuid"]}', None
     )

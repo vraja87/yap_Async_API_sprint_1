@@ -10,7 +10,9 @@ class TestSettings(BaseSettings):
 
     es_host: str = 'http://elasticsearch:9200'
     redis_host: str = 'redis://redis:6379'
-    es_index: str = 'movies'  # TODO ? movies genres persons
+    es_index_movies: str = 'movies'
+    es_index_persons: str = 'persons'
+    es_index_genres: str = 'genres'
     es_id_field: str = 'uuid'
     # es_index_mapping: dict = ''  # TODO need to fill
     service_url: str = 'http://fastapi:8000'

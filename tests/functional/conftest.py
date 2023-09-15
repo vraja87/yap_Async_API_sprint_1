@@ -13,7 +13,7 @@ def es_write_data_OLD(request):
     async def inner(data: List[dict]):
         marker = request.node.get_closest_marker("fixt_data")
         if marker is None:
-            es_index = test_settings.es_index
+            es_index = test_settings.es_index_movies
             es_id_field = test_settings.es_id_field
         else:
             es_index = marker.kwargs['es_index']
@@ -29,11 +29,66 @@ def es_write_data_OLD(request):
     return inner
 
 
+@pytest.fixture
+def es_write_persons(es_write_data_idx):
+    async def inner(data: List[dict]):
+        await es_write_data_idx(test_settings.es_index_persons,
+                                test_settings.es_id_field, data)
+    return inner
+
+
+@pytest.fixture
+def es_write_genres(es_write_data_idx):
+    async def inner(data: List[dict]):
+        await es_write_data_idx(test_settings.es_index_genres,
+                                test_settings.es_id_field, data)
+    return inner
+
+
+@pytest.fixture
+def es_write_movies(es_write_data_idx):
+    async def inner(data: List[dict]):
+        await es_write_data_idx(test_settings.es_index_movies,
+                                test_settings.es_id_field, data)
+    return inner
+
+
+@pytest.fixture
+# @pytest.fixture(scope='function')
+def es_write_data_idx():
+    async def inner(es_index, es_id_field, data: List[dict]):
+        bulk_query = get_es_bulk_query(data, es_index, es_id_field)
+        es_client = AsyncElasticsearch(hosts=[test_settings.es_host])
+        response = await es_client.bulk(operations=bulk_query, refresh=True)
+        await es_client.close()
+        if response['errors']:
+            raise Exception('Ошибка записи данных в Elasticsearch')
+    return inner
+
+
+
+@pytest.fixture
+# @pytest.fixture(scope='function')
+def es_write_data_idx():
+    async def inner(es_index, es_id_field, data: List[dict]):
+        bulk_query = get_es_bulk_query(data, es_index, es_id_field)
+        es_client = AsyncElasticsearch(hosts=[test_settings.es_host])
+        response = await es_client.bulk(operations=bulk_query, refresh=True)
+        await es_client.close()
+        if response['errors']:
+            raise Exception('Ошибка записи данных в Elasticsearch')
+    return inner
+
+
 @pytest.fixture(scope='session')
 async def es_client():
     client = AsyncElasticsearch(hosts=[test_settings.es_host])
     yield client
     await client.close()
+
+@pytest.fixture(scope='session')
+async def es_clean_indexes():
+    pass
 
 
 @pytest.fixture
@@ -41,7 +96,7 @@ def es_write_data(request, es_client: AsyncElasticsearch):
     async def inner(data: list[dict]):
         marker = request.node.get_closest_marker("fixt_data")
         if marker is None:
-            es_index = test_settings.es_index
+            es_index = test_settings.es_index_movies
             es_id_field = test_settings.es_id_field
         else:
             es_index = marker.kwargs['es_index']
@@ -66,7 +121,7 @@ def get_es_bulk_query(es_data: list[dict], es_index: str, es_id_field: str):
 
 
 @pytest.fixture(scope='session')
-async def http_session():
+async def http_session():  # TODO не используется!
     async with aiohttp.ClientSession() as session:
         yield session
 
