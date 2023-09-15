@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
+from http import HTTPStatus
 
 import backoff
+from fastapi import HTTPException
 from core.logger import logger, LoggerAdapter
 from elasticsearch import AsyncElasticsearch, NotFoundError, ConnectionError, \
     BadRequestError
@@ -9,11 +11,6 @@ from elasticsearch import AsyncElasticsearch, NotFoundError, ConnectionError, \
 
 class SearchNotFoundError(Exception):
     """Raised when a search query returns no results."""
-    pass
-
-
-class SearchBadRequestError(Exception):
-    """Raised when a search request parameters are wrong."""
     pass
 
 
@@ -130,7 +127,7 @@ class ElasticSearchEngine(AbstractSearchEngine):
         except NotFoundError as e:
             raise SearchNotFoundError(f"Document not found in Elasticsearch: {str(e)}") from e
         except BadRequestError as e:
-            raise SearchBadRequestError(f"Check request parameters: {str(e)}") from e
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Invalid request parameters")
 
 
 
