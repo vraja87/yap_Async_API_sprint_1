@@ -65,8 +65,6 @@ async def test_all_genres_page_num_size(make_get_request, query_data: dict, expe
     response = await make_get_request('/api/v1/genres/', query_data)
     assert response.status == expected_answer['status']
     assert len(response.body) == expected_answer['length']
-    # await redis_cleanup()
-    # await es_del_idx(test_settings.es_index_genres)
 
 
 @pytest.mark.asyncio
@@ -96,8 +94,6 @@ async def test_all_genres_format_sorting_consistency(make_get_request, query_dat
     assert len(response.body) == expected_answer['length']
     assert response.body == genres_slice
     assert response.body[0]['name'] < response.body[1]['name']
-    # await redis_cleanup()
-    # await es_del_idx(test_settings.es_index_genres)
 
 
 @pytest.mark.asyncio
@@ -125,8 +121,6 @@ async def test_genre_details(make_get_request, test_data: dict, expected_answer:
     response = await make_get_request(f'/api/v1/genres/{test_data["uuid"]}/', {})
     assert response.body == expected_answer['body']
     assert response.status == expected_answer['status']
-    # await redis_cleanup()
-    # await es_del_idx(test_settings.es_index_genres)
 
 
 @pytest.mark.asyncio
