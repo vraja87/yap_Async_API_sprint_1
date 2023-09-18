@@ -475,7 +475,7 @@ async def test_persons_page_num_size(make_get_request, test_data, expected_answe
         ),
     ]
 )
-async def test_genre_redis(make_get_request, test_data, expected_answer):
+async def test_person_redis(make_get_request, redis_cleanup, test_data, expected_answer):
     """
     Tests the caching behavior of the genre-related API endpoint using Redis.
 
@@ -483,6 +483,7 @@ async def test_genre_redis(make_get_request, test_data, expected_answer):
     :param test_data: Dictionary containing test parameters like 'uuid'.
     :param expected_answer: Expected API response with status code.
     """
+    await redis_cleanup()
     response1 = await make_get_request(f'/api/v1/persons/{test_data["uuid"]}', None)
     response2 = await make_get_request(f'/api/v1/persons/{test_data["uuid"]}', None)
     assert response1.status == expected_answer['status']

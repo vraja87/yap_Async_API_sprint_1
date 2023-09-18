@@ -229,7 +229,7 @@ async def test_film_search(make_get_request, test_data, expected_answer):
         ),
     ]
 )
-async def test_film_redis(make_get_request, test_data, expected_answer):
+async def test_film_redis(make_get_request, redis_cleanup, test_data, expected_answer):
     """
     Asynchronously test the film details cached in Redis.
 
@@ -237,6 +237,7 @@ async def test_film_redis(make_get_request, test_data, expected_answer):
     :param test_data: Data for the test case, specifically the film UUID.
     :param expected_answer: Expected status code.
     """
+    await redis_cleanup()
     response1 = await make_get_request(f'/api/v1/films/{test_data["uuid"]}', None)
     response2 = await make_get_request(f'/api/v1/films/{test_data["uuid"]}', None)
     assert response1.status == expected_answer['status']
