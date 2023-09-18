@@ -1,6 +1,8 @@
 from pprint import pprint
 
 import pytest
+
+from functional.settings import test_settings
 from functional.testdata.es_mapping import our_persons, our_persons_films
 
 @pytest.mark.asyncio
@@ -41,17 +43,21 @@ from functional.testdata.es_mapping import our_persons, our_persons_films
     ]
 )
 async def test_person_details(
-        es_write_movies, es_write_persons, make_get_request,
+        es_write, make_get_request,
+        redis_cleanup, es_del_idx,
         test_data, expected_answer
 ):
-    await es_write_movies(our_persons_films)
-    await es_write_persons(our_persons)
+    await es_write(test_settings.es_index_movies, our_persons_films)
+    await es_write(test_settings.es_index_persons, our_persons)
     body, headers, status = await make_get_request(
         f'/api/v1/persons/{test_data["uuid"]}', None
     )
 
     assert status == expected_answer['status']
     assert body == expected_answer['body']
+    await redis_cleanup()
+    await es_del_idx(test_settings.es_index_movies)
+    await es_del_idx(test_settings.es_index_persons)
 
 
 @pytest.mark.asyncio
@@ -95,16 +101,20 @@ async def test_person_details(
     ]
 )
 async def test_person_films(
-        es_write_movies, es_write_persons, make_get_request,
+        es_write, make_get_request,
+        redis_cleanup, es_del_idx,
         test_data, expected_answer
 ):
-    await es_write_movies(our_persons_films)
-    await es_write_persons(our_persons)
+    await es_write(test_settings.es_index_movies, our_persons_films)
+    await es_write(test_settings.es_index_persons, our_persons)
     body, headers, status = await make_get_request(
         f'/api/v1/persons/{test_data["uuid"]}/film', None
     )
     assert status == expected_answer['status']
     assert body == expected_answer['body']
+    await redis_cleanup()
+    await es_del_idx(test_settings.es_index_movies)
+    await es_del_idx(test_settings.es_index_persons)
 
 
 @pytest.mark.asyncio
@@ -176,17 +186,21 @@ async def test_person_films(
     ]
 )
 async def test_persons_search(
-        es_write_movies, es_write_persons, make_get_request,
+        es_write, make_get_request,
+        redis_cleanup, es_del_idx,
         test_data, expected_answer
 ):
-    await es_write_movies(our_persons_films)
-    await es_write_persons(our_persons)
+    await es_write(test_settings.es_index_movies, our_persons_films)
+    await es_write(test_settings.es_index_persons, our_persons)
     body, headers, status = await make_get_request(
         f'/api/v1/persons/search/', test_data
     )
 
     assert status == expected_answer['status']
     assert body == expected_answer['body']
+    await redis_cleanup()
+    await es_del_idx(test_settings.es_index_movies)
+    await es_del_idx(test_settings.es_index_persons)
 
 
 @pytest.mark.asyncio
@@ -252,16 +266,18 @@ async def test_persons_search(
     ]
 )
 async def test_persons_page_num_size(
-        es_write_movies, es_write_persons, make_get_request,
+        es_write, make_get_request,
+        redis_cleanup, es_del_idx,
         test_data, expected_answer
 ):
-    await es_write_movies(our_persons_films)
-    await es_write_persons(our_persons)
+    await es_write(test_settings.es_index_movies, our_persons_films)
+    await es_write(test_settings.es_index_persons, our_persons)
     body, headers, status = await make_get_request(
         f'/api/v1/persons/search/', test_data
     )
-    # print('body, headers, status')
-    # pprint((body, headers, status))
 
     assert status == expected_answer['status']
     assert len(body) == expected_answer['length']
+    await redis_cleanup()
+    await es_del_idx(test_settings.es_index_movies)
+    await es_del_idx(test_settings.es_index_persons)

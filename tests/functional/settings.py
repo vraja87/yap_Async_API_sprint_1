@@ -14,7 +14,6 @@ class TestSettings(BaseSettings):
     es_index_persons: str = 'persons'
     es_index_genres: str = 'genres'
     es_id_field: str = 'uuid'
-    # es_index_mapping: dict = ''  # TODO need to fill
     service_url: str = 'http://fastapi:8000'
 
 
