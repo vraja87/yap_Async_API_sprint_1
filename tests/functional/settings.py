@@ -13,8 +13,17 @@ class TestSettings(BaseSettings):
     es_index_movies: str = 'movies'
     es_index_persons: str = 'persons'
     es_index_genres: str = 'genres'
+    es_indexes: list[str] | None = None
     es_id_field: str = 'uuid'
     service_url: str = 'http://fastapi:8000'
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if not self.es_indexes:
+            self.es_indexes = [self.es_index_movies,
+                               self.es_index_persons,
+                               self.es_index_genres,
+                               ]
 
 
 test_settings = TestSettings()

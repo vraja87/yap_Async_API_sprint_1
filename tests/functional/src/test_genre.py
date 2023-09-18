@@ -1,7 +1,7 @@
 import pytest
 
+import functional.testdata.es_backup as es_mapping
 from functional.settings import test_settings
-from functional.testdata.es_mapping import our_genres
 
 
 @pytest.mark.asyncio
@@ -14,22 +14,22 @@ from functional.testdata.es_mapping import our_genres
         ),
         (
             {'page_number': 0},
-            {'status': 200, 'length': 30}  # start page 0
+            {'status': 200, 'length': 30}
         ),
         (
             {'page_number': 1},
             {'status': 404, 'length': 1}
         ),
         (
-            {'page_number': -1},  # incorrect
+            {'page_number': -1},
             {'status': 422, 'length': 1}
         ),
         (
-            {'page_number': 100},  # too big
+            {'page_number': 100},
             {'status': 400, 'length': 1}
         ),
         (
-            {'page_number': 'Mashed potato'},  # not int
+            {'page_number': 'Mashed potato'},
             {'status': 422, 'length': 1}
         ),
         (
@@ -54,22 +54,19 @@ from functional.testdata.es_mapping import our_genres
         ),
     ]
 )
-async def test_all_genres_page_num_size(
-        make_get_request, es_write, redis_cleanup, es_del_idx,
-        query_data: dict, expected_answer: dict
-):
-    """Test different page_size and page_number combinations"""
+async def test_all_genres_page_num_size(make_get_request, query_data: dict, expected_answer: dict):
+    """
+    Asynchronously test various combinations of page_size and page_number for genre listing.
 
-    await es_write(test_settings.es_index_genres, our_genres)
-    body, headers, status = await make_get_request(
-        f'/api/v1/genres/', query_data
-    )
-
-    assert status == expected_answer['status']
-    assert len(body) == expected_answer['length']
-
-    await redis_cleanup()
-    await es_del_idx(test_settings.es_index_genres)
+    :param make_get_request: Async fixture for making GET requests.
+    :param query_data: Data for the test case.
+    :param expected_answer: Expected status code and body length.
+    """
+    response = await make_get_request('/api/v1/genres/', query_data)
+    assert response.status == expected_answer['status']
+    assert len(response.body) == expected_answer['length']
+    # await redis_cleanup()
+    # await es_del_idx(test_settings.es_index_genres)
 
 
 @pytest.mark.asyncio
@@ -82,24 +79,25 @@ async def test_all_genres_page_num_size(
         ),
     ]
 )
-async def test_all_genres_format_sorting_consistency(
-        make_get_request,  es_write, redis_cleanup, es_del_idx,
-        query_data: dict, expected_answer: dict
-):
-    """Test data consistency on some page, genre format, sorting by names"""
-    await es_write(test_settings.es_index_genres, our_genres)
-    body, headers, status = await make_get_request(f'/api/v1/genres/',
-                                                   query_data)
+async def test_all_genres_format_sorting_consistency(make_get_request, query_data: dict, expected_answer: dict):
+    """
+    Asynchronously test the consistency of genre data format and sorting by names.
 
-    genres_slice = sorted(our_genres, key=lambda x: x['name'])[
-                   query_data['page_number'] * query_data['page_size']:]
+    :param make_get_request: Async fixture for making GET requests.
+    :param query_data: Data for the test case.
+    :param expected_answer: Expected status code and body length.
+    """
+    response = await make_get_request('/api/v1/genres/', query_data)
 
-    assert status == expected_answer['status']
-    assert len(body) == expected_answer['length']
-    assert genres_slice == body
-    assert body[0]['name'] < body[1]['name']
-    await redis_cleanup()
-    await es_del_idx(test_settings.es_index_genres)
+    genres_slice = sorted(es_mapping.data[test_settings.es_index_genres],
+                          key=lambda x: x['name'])[query_data['page_number'] * query_data['page_size']:]
+
+    assert response.status == expected_answer['status']
+    assert len(response.body) == expected_answer['length']
+    assert response.body == genres_slice
+    assert response.body[0]['name'] < response.body[1]['name']
+    # await redis_cleanup()
+    # await es_del_idx(test_settings.es_index_genres)
 
 
 @pytest.mark.asyncio
@@ -107,27 +105,51 @@ async def test_all_genres_format_sorting_consistency(
     'test_data, expected_answer',
     [
         (
-            {'uuid': our_genres[4]['uuid']},
-            {'body': our_genres[4],
-             'status': 200}
+            {'uuid': es_mapping.data[test_settings.es_index_genres][4]['uuid']},
+            {'body': es_mapping.data[test_settings.es_index_genres][4], 'status': 200}
         ),
         (
             {'uuid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'},
-            {'body': {'detail': 'Genre not found.'},
-             'status': 404}
+            {'body': {'detail': 'Genre not found.'}, 'status': 404}
         ),
     ]
 )
-async def test_genre_details(
-        es_write, make_get_request, redis_cleanup, es_del_idx,
-        test_data, expected_answer
-):
-    await es_write(test_settings.es_index_genres, our_genres)
-    body, headers, status = await make_get_request(
-        f'/api/v1/genres/{test_data["uuid"]}', None
-    )
+async def test_genre_details(make_get_request, test_data: dict, expected_answer: dict):
+    """
+    Asynchronously test the details of a specific genre by UUID.
 
-    assert status == expected_answer['status']
-    assert body == expected_answer['body']
-    await redis_cleanup()
-    await es_del_idx(test_settings.es_index_genres)
+    :param make_get_request: Async fixture for making GET requests.
+    :param test_data: Data for the test case.
+    :param expected_answer: Expected response data and status code.
+    """
+    response = await make_get_request(f'/api/v1/genres/{test_data["uuid"]}/', {})
+    assert response.body == expected_answer['body']
+    assert response.status == expected_answer['status']
+    # await redis_cleanup()
+    # await es_del_idx(test_settings.es_index_genres)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'test_data, expected_answer',
+    [
+        (
+                {'uuid': es_mapping.data[test_settings.es_index_genres][20]['uuid']},
+                {'status': 200}
+        ),
+    ]
+)
+async def test_genre_redis(make_get_request, test_data, expected_answer):
+    """
+    Asynchronously test the genre details cached in Redis.
+
+    :param make_get_request: Async fixture for making GET requests.
+    :param test_data: Data for the test case, specifically the genre UUID.
+    :param expected_answer: Expected status code.
+    """
+    response1 = await make_get_request(f'/api/v1/genres/{test_data["uuid"]}', None)
+    response2 = await make_get_request(f'/api/v1/genres/{test_data["uuid"]}', None)
+    assert response1.status == expected_answer['status']
+    assert response2.status == expected_answer['status']
+    assert response1.body == response2.body
+    assert response2.response_time < response1.response_time

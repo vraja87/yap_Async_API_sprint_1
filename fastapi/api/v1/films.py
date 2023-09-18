@@ -21,7 +21,7 @@ redis_conf = config.RedisConf()
             summary='Retrieve Films Based on Multiple Filters',
             description='Fetch a list of films filtered by genres, IMDb rating, and sorting preferences.'
                         'Supports pagination.',
-            response_model=list[FilmResponse],
+            response_model=list[FilmResponse] | None,
             responses=api_examples.films,
             )
 async def films(genre: list[str] = Query([], min_length=0, max_length=5),
@@ -46,18 +46,26 @@ async def films(genre: list[str] = Query([], min_length=0, max_length=5),
     :param film_service: Dependency to access the film service.
     :return: A list of films meeting the filter criteria.
     """
-    return await film_search(
-        query=None,
-        fuzziness=0,
-        genre=genre,
-        genre_condition=genre_condition,
-        sort_by=sort_by,
-        rating_min=rating_min,
-        rating_max=rating_max,
-        page_number=page_number,
-        page_size=page_size,
-        film_service=film_service
-    )
+
+    try:
+        result = await film_search(
+            query=None,
+            fuzziness=0,
+            genre=genre,
+            genre_condition=genre_condition,
+            sort_by=sort_by,
+            rating_min=rating_min,
+            rating_max=rating_max,
+            page_number=page_number,
+            page_size=page_size,
+            film_service=film_service
+        )
+        if result is None:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Films not found.')
+        return result
+
+    except HTTPException as e:
+        raise e
 
 
 @logger.catch
@@ -115,6 +123,7 @@ async def film_search(query: str | None = Query(None, min_length=1, max_length=1
     films = await film_service.get_all(params)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Films not found.')
+
     return [FilmResponse(uuid=film.uuid, title=film.title, imdb_rating=film.imdb_rating) for film in films]
 
 

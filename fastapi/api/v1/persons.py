@@ -37,7 +37,10 @@ async def person_details(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='person not found')
 
-    films_result = await film_service.get_roles_in_films(person)
+    if not person.films:
+        films_result = []
+    else:
+        films_result = await film_service.get_roles_in_films(person)
     return PersonResponse(
         uuid=person.uuid,
         full_name=person.full_name,
