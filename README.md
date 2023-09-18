@@ -1,7 +1,7 @@
 # Async API
 
-[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue.svg)](https://github.com/telemachor/Async_API_sprint_1)
-
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue.svg)](https://github.com/telemachor/Async_API_sprint_2)
+  
 ## Setup
 
 - Create and fill out a `.env` using `.env.example`.
@@ -30,6 +30,15 @@ The Makefile provides a set of commands to manage and interact with project usin
 | `make down`      | Stop all Docker containers.                                                          |
 | `make hard_down` | Remove all Docker containers and networks. Deletes initialization flag.              |
 | `make migrate`   | Apply database migrations.                                                           |
+
+#### Running Tests
+
+To run functional tests, execute the following command:
+
+```bash
+make test
+```
+
 
 #### API Endpoints
 
