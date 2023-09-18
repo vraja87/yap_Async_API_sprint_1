@@ -3,7 +3,6 @@ from http import HTTPStatus
 import api.v1.api_examples as api_examples
 from api.v1.models.genre import GenreResponse
 from core.logger import logger
-from db.search_engine import SearchBadRequestError
 from services.genre import GenreService, get_genre_service
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -63,11 +62,7 @@ async def genres_all(genre_service: GenreService = Depends(get_genre_service),
             }
         ]
     }
-    try:
-        genres = await genre_service.get_all(params)
-    except SearchBadRequestError:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
-                            detail="Invalid request parameters")  # TODO maybe need in other places or by SOLID need one place for that. es layer is bad for raise http exceptions
+    genres = await genre_service.get_all(params)
     if not genres:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Genres not found.')
 
