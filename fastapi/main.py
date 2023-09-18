@@ -54,7 +54,7 @@ async def shutdown():
     )
     await SearchClientInitializer.close_client(
         search_conf.backend_type,
-        search_conf.search_conf.client
+        search_engine.search_engine.client
     )
 
 

@@ -37,7 +37,10 @@ async def person_details(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='person not found')
 
-    films_result = await film_service.get_roles_in_films(person)
+    if not person.films:
+        films_result = []
+    else:
+        films_result = await film_service.get_roles_in_films(person)
     return PersonResponse(
         uuid=person.uuid,
         full_name=person.full_name,
@@ -70,6 +73,9 @@ async def persons_films(person_id: str,
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='person not found')
+    if not person.films:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                            detail='films with person were not found')
     films = await film_service.get_person_films_info(person)
     return [FilmResponse(uuid=film['uuid'], title=film['title'], imdb_rating=film['imdb_rating']) for film in films]
 

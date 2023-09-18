@@ -96,6 +96,7 @@ class BaseService:
                                                      sort=body['sort'],
                                                      **pagination)
         except SearchNotFoundError:
+            result = {}
             pass
 
         result = result.get('hits', {}).get('hits', [])
