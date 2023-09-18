@@ -30,6 +30,12 @@ init_once:
 		make up; \
 	fi
 
+test:
+	docker-compose -f tests/functional/docker-compose.yml up -d --build && \
+	docker-compose -f tests/functional/docker-compose.yml logs -f tests && \
+	docker-compose -f tests/functional/docker-compose.yml down -v
+
+
 rebuild: hard_down init_once
 
 re: rebuild

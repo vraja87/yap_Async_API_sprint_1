@@ -18,14 +18,14 @@ services:
     entrypoint: >
       sh -c " python3 ./utils/wait_for_es.py
       && python3 ./utils/wait_for_redis.py
-      && pytest ./src"
+      && pytest ./src --capture=no"
     depends_on:
      - fastapi
     env_file:
       - ../../.env
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    image: elasticsearch:8.9.1
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
