@@ -1,56 +1,56 @@
-import pytest
+from http import HTTPStatus
 
 import functional.testdata.es_backup as es_mapping
+import pytest
 from functional.settings import test_settings
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'query_data, expected_answer',
     [
         (
             {},
-            {'status': 200, 'length': 30}
+            {'status': HTTPStatus.OK, 'length': 30}
         ),
         (
             {'page_number': 0},
-            {'status': 200, 'length': 30}
+            {'status': HTTPStatus.OK, 'length': 30}
         ),
         (
             {'page_number': 1},
-            {'status': 404, 'length': 1}
+            {'status': HTTPStatus.NOT_FOUND, 'length': 1}
         ),
         (
             {'page_number': -1},
-            {'status': 422, 'length': 1}
+            {'status': HTTPStatus.UNPROCESSABLE_ENTITY, 'length': 1}
         ),
         (
             {'page_number': 100},
-            {'status': 400, 'length': 1}
+            {'status': HTTPStatus.BAD_REQUEST, 'length': 1}
         ),
         (
             {'page_number': 'Mashed potato'},
-            {'status': 422, 'length': 1}
+            {'status': HTTPStatus.UNPROCESSABLE_ENTITY, 'length': 1}
         ),
         (
             {'page_size': 10},
-            {'status': 200, 'length': 10}
+            {'status': HTTPStatus.OK, 'length': 10}
         ),
         (
             {'page_size': 20},
-            {'status': 200, 'length': 20}
+            {'status': HTTPStatus.OK, 'length': 20}
         ),
         (
             {'page_size': 0},
-            {'status': 422, 'length': 1}
+            {'status': HTTPStatus.UNPROCESSABLE_ENTITY, 'length': 1}
         ),
         (
             {'page_size': -1},
-            {'status': 422, 'length': 1}
+            {'status': HTTPStatus.UNPROCESSABLE_ENTITY, 'length': 1}
         ),
         (
             {'page_size': 5000},
-            {'status': 200, 'length': 30}
+            {'status': HTTPStatus.OK, 'length': 30}
         ),
     ]
 )
@@ -63,17 +63,17 @@ async def test_all_genres_page_num_size(make_get_request, query_data: dict, expe
     :param expected_answer: Expected status code and body length.
     """
     response = await make_get_request('/api/v1/genres/', query_data)
+
     assert response.status == expected_answer['status']
     assert len(response.body) == expected_answer['length']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'query_data, expected_answer',
     [
         (
             {'page_number': 2, 'page_size': 10},
-            {'status': 200, 'length': 10}
+            {'status': HTTPStatus.OK, 'length': 10}
         ),
     ]
 )
@@ -85,10 +85,10 @@ async def test_all_genres_format_sorting_consistency(make_get_request, query_dat
     :param query_data: Data for the test case.
     :param expected_answer: Expected status code and body length.
     """
-    response = await make_get_request('/api/v1/genres/', query_data)
-
     genres_slice = sorted(es_mapping.data[test_settings.es_index_genres],
                           key=lambda x: x['name'])[query_data['page_number'] * query_data['page_size']:]
+
+    response = await make_get_request('/api/v1/genres/', query_data)
 
     assert response.status == expected_answer['status']
     assert len(response.body) == expected_answer['length']
@@ -96,17 +96,16 @@ async def test_all_genres_format_sorting_consistency(make_get_request, query_dat
     assert response.body[0]['name'] < response.body[1]['name']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
         (
             {'uuid': es_mapping.data[test_settings.es_index_genres][4]['uuid']},
-            {'body': es_mapping.data[test_settings.es_index_genres][4], 'status': 200}
+            {'body': es_mapping.data[test_settings.es_index_genres][4], 'status': HTTPStatus.OK}
         ),
         (
             {'uuid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'},
-            {'body': {'detail': 'Genre not found.'}, 'status': 404}
+            {'body': {'detail': 'Genre not found.'}, 'status': HTTPStatus.NOT_FOUND}
         ),
     ]
 )
@@ -119,17 +118,17 @@ async def test_genre_details(make_get_request, test_data: dict, expected_answer:
     :param expected_answer: Expected response data and status code.
     """
     response = await make_get_request(f'/api/v1/genres/{test_data["uuid"]}/', {})
+
     assert response.body == expected_answer['body']
     assert response.status == expected_answer['status']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
         (
                 {'uuid': es_mapping.data[test_settings.es_index_genres][20]['uuid']},
-                {'status': 200}
+                {'status': HTTPStatus.OK}
         ),
     ]
 )

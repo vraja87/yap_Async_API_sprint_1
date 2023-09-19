@@ -2,8 +2,8 @@ import pytest_asyncio
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 from loguru import logger
-import functional.testdata.es_backup as es_mapping
 
+import functional.testdata.es_backup as es_mapping
 from functional.settings import test_settings
 
 

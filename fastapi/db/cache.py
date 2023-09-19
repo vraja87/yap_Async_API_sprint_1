@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
-import backoff
-from core.logger import logger, LoggerAdapter
 
-from redis.asyncio import Redis, ConnectionError
+import backoff
+from core.logger import LoggerAdapter, logger
+from redis.asyncio import ConnectionError, Redis
 
 
 class CacheClientInitializer:

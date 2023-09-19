@@ -1,8 +1,8 @@
 import json
 from functools import wraps
 
-from db.cache import get_cache
 from core.logger import logger
+from db.cache import get_cache
 
 
 def async_cache(expire: int = 60):

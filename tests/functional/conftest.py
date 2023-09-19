@@ -1,12 +1,11 @@
 import asyncio
-import pytest_asyncio
 import time
 
 import aiohttp
 import pytest
+import pytest_asyncio
 
 from functional.settings import test_settings
-
 
 pytest_plugins = ("functional.fixtures.redis", "functional.fixtures.elastic")
 

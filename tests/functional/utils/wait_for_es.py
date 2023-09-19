@@ -10,7 +10,6 @@ sys.path.append(parent_path)
 
 from elasticsearch import Elasticsearch
 from loguru import logger
-
 from settings import test_settings
 
 

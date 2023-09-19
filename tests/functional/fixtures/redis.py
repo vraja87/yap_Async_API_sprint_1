@@ -1,5 +1,6 @@
-from redis.asyncio import Redis
 import pytest_asyncio
+from redis.asyncio import Redis
+
 from functional.settings import test_settings
 
 

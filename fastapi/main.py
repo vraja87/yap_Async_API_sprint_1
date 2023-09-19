@@ -1,9 +1,9 @@
 from api.v1 import films, genres, persons
 from core import config
 from core.logger import logger
-from db import search_engine, cache
-from db.search_engine import SearchBackendFactory, SearchClientInitializer
+from db import cache, search_engine
 from db.cache import CacheBackendFactory, CacheClientInitializer
+from db.search_engine import SearchBackendFactory, SearchClientInitializer
 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
