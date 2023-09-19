@@ -1,10 +1,11 @@
+from http import HTTPStatus
+
+import functional.testdata.es_backup as es_mapping
 import pytest_asyncio
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
-from loguru import logger
-
-import functional.testdata.es_backup as es_mapping
 from functional.settings import test_settings
+from loguru import logger
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -22,7 +23,6 @@ async def es_fill_indexes():
     Yields:
         client: The Elasticsearch client.
     """
-
 
     logger.info("Create elasticsearch client.")
 
@@ -54,4 +54,6 @@ async def es_fill_indexes():
         yield client
         for index in test_settings.es_indexes:
             logger.info(f"Clear {index_name} index.")
-            await client.options(ignore_status=[400, 404]).indices.delete(index=index)
+            await client.options(
+                ignore_status=[HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND]
+            ).indices.delete(index=index)

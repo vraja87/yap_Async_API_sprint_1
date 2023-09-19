@@ -1,7 +1,6 @@
 import pytest_asyncio
-from redis.asyncio import Redis
-
 from functional.settings import test_settings
+from redis.asyncio import Redis
 
 
 @pytest_asyncio.fixture(scope='session')
@@ -11,5 +10,3 @@ def redis_cleanup():
         redis_client = Redis.from_url(test_settings.redis_host)
         await redis_client.flushall()
     return inner
-
-
