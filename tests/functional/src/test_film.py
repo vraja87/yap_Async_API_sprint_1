@@ -1,10 +1,10 @@
-import pytest
+from http import HTTPStatus
 
 import functional.testdata.es_backup as es_mapping
+import pytest
 from functional.settings import test_settings
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
@@ -31,22 +31,22 @@ from functional.settings import test_settings
                                         {"uuid": "9ace0dfa-aac5-4c9d-8be0-0b8d2b795b7e", "full_name": "Andrew Potter"},
                                         {"uuid": "47544eac-9e82-4bea-a678-1344270aeec2",
                                          "full_name": "Gabrielle Anderson"}]},
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
         (
                 {'uuid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'},
                 {'body': {'detail': 'Film not found.'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'uuid': 'xxxxxxxx'},
                 {'body': {'detail': 'Film not found.'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'uuid': 327},
                 {'body': {'detail': 'Film not found.'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
     ]
 )
@@ -64,14 +64,13 @@ async def test_film_details(make_get_request, test_data, expected_answer):
     assert response.body == expected_answer['body']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
         (
                 {'page_number': 2,
                  'page_size': 5},
-                {'status': 200}
+                {'status': HTTPStatus.OK}
         ),
         (
                 {'page_number': 2,
@@ -79,7 +78,7 @@ async def test_film_details(make_get_request, test_data, expected_answer):
                  'rating_max': 7.5,
                  'sort': ['-imdb_rating']
                  },
-                {'status': 200}
+                {'status': HTTPStatus.OK}
         ),
         (
                 {'page_number': 2,
@@ -87,7 +86,7 @@ async def test_film_details(make_get_request, test_data, expected_answer):
                  'rating_max': 7.5,
                  'sort': ['imdb_rating']
                  },
-                {'status': 200}
+                {'status': HTTPStatus.OK}
         ),
     ]
 )
@@ -99,8 +98,6 @@ async def test_film_list_sort_filter(make_get_request, test_data, expected_answe
     :param test_data: Data for the test case.
     :param expected_answer: Expected status code.
     """
-    response = await make_get_request('/api/v1/films/', test_data)
-
     start_idx = test_data['page_number'] * test_data['page_size']
     end_idx = start_idx + test_data['page_size']
     rating_max = float(test_data['rating_max']) if 'rating_max' in test_data else 10
@@ -111,8 +108,9 @@ async def test_film_list_sort_filter(make_get_request, test_data, expected_answe
         order = True
     genres_slice = sorted([y for y in es_mapping.data[test_settings.es_index_movies] if y['imdb_rating'] < rating_max],
                           key=lambda x: x['imdb_rating'], reverse=order)[start_idx: end_idx]
-
     genres_slice = [{'uuid': x['uuid'], 'title': x['title'], 'imdb_rating': x['imdb_rating']} for x in genres_slice]
+
+    response = await make_get_request('/api/v1/films/', test_data)
 
     assert response.status == expected_answer['status']
     assert len(response.body) == len(genres_slice)
@@ -123,21 +121,20 @@ async def test_film_list_sort_filter(make_get_request, test_data, expected_answe
         assert response.body[0]['imdb_rating'] < response.body[1]['imdb_rating']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
         (
                 {'page_number': -1,
                  'page_size': 5},
-                {'status': 422}
+                {'status': HTTPStatus.UNPROCESSABLE_ENTITY}
         ),
         (
                 {'page_number': 2,
                  'page_size': 0,
                  'sort_by': '+imdb_rating'
                  },
-                {'status': 422}
+                {'status': HTTPStatus.UNPROCESSABLE_ENTITY}
         ),
         (
                 {'page_number': 10,
@@ -146,7 +143,7 @@ async def test_film_list_sort_filter(make_get_request, test_data, expected_answe
                  'sort_by': 'imdb_rating'
                  },
                 {'body': {'detail': 'Films not found.'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
     ]
 )
@@ -161,11 +158,10 @@ async def test_film_page_border_cases(make_get_request, test_data, expected_answ
     response = await make_get_request('/api/v1/films/', test_data)
 
     assert response.status == expected_answer['status']
-    if expected_answer['status'] == 404:
+    if expected_answer['status'] == HTTPStatus.NOT_FOUND:
         assert response.body == expected_answer['body']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
@@ -186,7 +182,7 @@ async def test_film_page_border_cases(make_get_request, test_data, expected_answ
                            "title": "Devolved attitude-oriented throughput", "imdb_rating": 2.888865758958029},
                           {"uuid": "bdb149a2-24d6-46eb-8d15-39ad3f4cd9f8", "title": "Sharable transitional protocol",
                            "imdb_rating": 2.5830342106708857}],
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
         (
                 {
@@ -201,7 +197,7 @@ async def test_film_page_border_cases(make_get_request, test_data, expected_answ
                                                                "imdb_rating": 7.118053190956019},
                           {"uuid": "f4d93ee3-9c10-4ff2-808e-d98f9da4cb46", "title": "Adaptive heuristic database",
                            "imdb_rating": 0.7585282914865377}],
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
     ]
 )
@@ -214,18 +210,18 @@ async def test_film_search(make_get_request, test_data, expected_answer):
     :param expected_answer: Expected response data and status code.
     """
     response = await make_get_request('/api/v1/films/search/', test_data)
+
     assert response.status == expected_answer['status']
     assert len(response.body) == len(expected_answer['body'])
     assert response.body == expected_answer['body']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
         (
                 {'uuid': es_mapping.data[test_settings.es_index_movies][20]['uuid']},
-                {'status': 200}
+                {'status': HTTPStatus.OK}
         ),
     ]
 )
@@ -238,8 +234,10 @@ async def test_film_redis(make_get_request, redis_cleanup, test_data, expected_a
     :param expected_answer: Expected status code.
     """
     await redis_cleanup()
+
     response1 = await make_get_request(f'/api/v1/films/{test_data["uuid"]}', None)
     response2 = await make_get_request(f'/api/v1/films/{test_data["uuid"]}', None)
+
     assert response1.status == expected_answer['status']
     assert response2.status == expected_answer['status']
     assert response1.body == response2.body

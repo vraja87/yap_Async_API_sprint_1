@@ -1,10 +1,10 @@
-import pytest
+from http import HTTPStatus
 
-from functional.settings import test_settings
 import functional.testdata.es_backup as es_mapping
+import pytest
+from functional.settings import test_settings
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
@@ -127,22 +127,22 @@ import functional.testdata.es_backup as es_mapping
                               }
                           ]
                           },
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
         (
                 {'uuid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'},
                 {'body': {'detail': 'person not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'uuid': 'xxxxxxxx'},
                 {'body': {'detail': 'person not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'uuid': 327},
                 {'body': {'detail': 'person not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
     ]
 )
@@ -160,7 +160,6 @@ async def test_person_details(make_get_request, test_data, expected_answer):
     assert response.body == expected_answer['body']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
@@ -222,22 +221,22 @@ async def test_person_details(make_get_request, test_data, expected_answer):
                                                                  "imdb_rating": 9.71734474867197},
                           {"uuid": "3bbc3bd5-83a2-41f1-98e5-f9aafbd7b65e",
                            "title": "Triple-buffered bandwidth-monitored challenge", "imdb_rating": 7.126311002024362}],
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
         (
                 {'uuid': 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'},
                 {'body': {'detail': 'person not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'uuid': "9135cc2b-1ed0-465b-a976-34e021b80fd5"},
                 {'body': {'detail': 'films with person were not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'uuid': 327},
                 {'body': {'detail': 'person not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
     ]
 )
@@ -255,7 +254,6 @@ async def test_person_films(make_get_request, test_data, expected_answer):
     assert response.body == expected_answer['body']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
@@ -291,7 +289,7 @@ async def test_person_films(make_get_request, test_data, expected_answer):
                                      {"uuid": "998e898c-bf0f-4e53-862d-15f90fd3892c", "roles": ["writer"]},
                                      {"uuid": "4c93f3f1-20f4-46ad-b301-8b1e3174f4f0", "roles": ["director"]},
                                      {"uuid": "0f925154-2a24-445e-9f57-6480ee1a73fd", "roles": ["actor"]}]}],
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
         (
                 {'query': 'Thomas',
@@ -348,7 +346,7 @@ async def test_person_films(make_get_request, test_data, expected_answer):
                                      {"uuid": "2c1c826b-f66a-48ec-a68e-5cf7fc3c042c", "roles": ["director"]},
                                      {"uuid": "25bffeee-4b71-45ab-96c2-14a28a16a718", "roles": ["actor"]},
                                      {"uuid": "27f96ae0-ed22-4b91-b1ba-053e8be9ba67", "roles": ["director"]}]}],
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
         (
                 {'query': '',
@@ -356,7 +354,7 @@ async def test_person_films(make_get_request, test_data, expected_answer):
                  'page_number': 0,
                  'page_size': 10},
                 {'body': {'detail': 'persons not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'query': ' ',
@@ -364,7 +362,7 @@ async def test_person_films(make_get_request, test_data, expected_answer):
                  'page_number': 0,
                  'page_size': 10},
                 {'body': {'detail': 'persons not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'query': 'Stephen Hawking',  # no one
@@ -372,7 +370,7 @@ async def test_person_films(make_get_request, test_data, expected_answer):
                  'page_number': 0,
                  'page_size': 10},
                 {'body': {'detail': 'persons not found'},
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
     ]
 )
@@ -390,7 +388,6 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
     assert response.body == expected_answer['body']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
@@ -400,7 +397,7 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
                  'page_number': 0,
                  'page_size': 10},
                 {'length': 2,
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
         (
                 {'query': 'Anderson',
@@ -408,7 +405,7 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
                  'page_number': 1,
                  'page_size': 10},
                 {'length': 1,
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'query': 'Anderson',
@@ -416,7 +413,7 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
                  'page_number': -1,
                  'page_size': 10},
                 {'length': 1,
-                 'status': 422}
+                 'status': HTTPStatus.UNPROCESSABLE_ENTITY}
         ),
         (
                 {'query': 'Anderson',
@@ -424,7 +421,7 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
                  'page_number': 100,
                  'page_size': 10},
                 {'length': 1,
-                 'status': 404}
+                 'status': HTTPStatus.NOT_FOUND}
         ),
         (
                 {'query': 'Anderson',
@@ -432,7 +429,7 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
                  'page_number': 0,
                  'page_size': 0},
                 {'length': 1,
-                 'status': 422}
+                 'status': HTTPStatus.UNPROCESSABLE_ENTITY}
         ),
         (
                 {'query': 'Anderson',
@@ -440,7 +437,7 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
                  'page_number': 0,
                  'page_size': -1},
                 {'length': 1,
-                 'status': 422}
+                 'status': HTTPStatus.UNPROCESSABLE_ENTITY}
         ),
         (
                 {'query': 'Anderson',
@@ -448,7 +445,7 @@ async def test_persons_search(make_get_request, test_data, expected_answer):
                  'page_number': 0,
                  'page_size': 1000},
                 {'length': 2,
-                 'status': 200}
+                 'status': HTTPStatus.OK}
         ),
     ]
 )
@@ -465,13 +462,12 @@ async def test_persons_page_num_size(make_get_request, test_data, expected_answe
     assert len(response.body) == expected_answer['length']
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     'test_data, expected_answer',
     [
         (
                 {'uuid': es_mapping.data[test_settings.es_index_persons][20]['uuid']},
-                {'status': 200}
+                {'status': HTTPStatus.OK}
         ),
     ]
 )

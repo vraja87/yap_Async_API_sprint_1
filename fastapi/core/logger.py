@@ -1,4 +1,5 @@
 import logging
+
 from loguru import logger
 
 fmt = "{process.id} - {thread.id} - {time} - {name} - {level} - {message}"

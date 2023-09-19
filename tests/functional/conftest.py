@@ -1,18 +1,16 @@
 import asyncio
+import json
 import time
 
 import aiohttp
+import functional.testdata.es_backup as es_mapping
 import pytest
-import json
-
-from redis.asyncio import Redis
-
 import pytest_asyncio
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
-from loguru import logger
-import functional.testdata.es_backup as es_mapping
 from functional.settings import test_settings
+from loguru import logger
+from redis.asyncio import Redis
 
 
 @pytest.fixture(scope='session')
@@ -50,7 +48,6 @@ async def es_fill_indexes():
     Yields:
         client: The Elasticsearch client.
     """
-
 
     logger.info("Create elasticsearch client.")
 

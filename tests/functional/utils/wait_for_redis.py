@@ -9,7 +9,6 @@ sys.path.append(parent_path)
 
 from loguru import logger
 from redis import ConnectionError, Redis
-
 from settings import test_settings
 
 
